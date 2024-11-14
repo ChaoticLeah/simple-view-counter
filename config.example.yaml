@@ -2,3 +2,4 @@
 
 allowed_origin: "http://localhost:8080" # Allowed origin for CORS
 port: 8080
+cooldown: 12 # How many hours to wait before accepting another view from the same IP on the same route. If the server restarts then it will also accept new views

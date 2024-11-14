@@ -5,6 +5,7 @@ use std::{error::Error, fs, io};
 pub struct Config {
     pub allowed_origin: Option<String>,
     pub port: u16,
+    pub cooldown: Option<u64>,
 }
 
 pub async fn load_config() -> Result<Config, Box<dyn Error>> {

@@ -1,8 +1,11 @@
 use actix_cors::Cors;
-use actix_web::{dev::ResourcePath, get, post, http, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{dev::ResourcePath, get, http, post, web::{self, Data}, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use serde::Serialize;
+use std::sync::Mutex;
+
 mod db;
 mod config;
+mod cooldown;
 
 
 #[derive(Serialize)]
@@ -11,8 +14,20 @@ struct CountResponse {
 }
 
 #[post("/increment/{name}")]
-async fn increment(data: web::Path<String>) -> impl Responder {
-    let views = db::add_view(&data.path());    
+// async fn increment(data: web::Path<String>) -> impl Responder {
+async fn increment(req: HttpRequest) -> impl Responder {
+    let data = req.app_data::<Data<Mutex<cooldown::Cooldown>>>().unwrap();
+    let connection_info = req.connection_info().clone();
+    let ip = connection_info.realip_remote_addr().unwrap();
+    println!("IP: {}", ip);
+
+    let mut cooldown = data.lock().unwrap();
+
+    if !cooldown.check(&ip) {
+        let views = db::get_views(&req.path());
+        return HttpResponse::TooManyRequests().json(CountResponse { count: views.unwrap_or(0) });
+    }
+    let views = db::add_view(&req.path());    
     HttpResponse::Ok().json(CountResponse { count: views.unwrap_or(0) })
 }
 
@@ -30,14 +45,17 @@ async fn main() -> std::io::Result<()> {
         Some(origin) => origin,
         None => "http://localhost:8080".to_string(),
     };
+
+    let cooldown_setting = match config.cooldown {
+        Some(cooldown) => cooldown,
+        None => 12,
+    };
     
+    let cooldown: Data<Mutex<cooldown::Cooldown>> = Data::new(Mutex::new(cooldown::Cooldown::new(cooldown_setting)));
     HttpServer::new(move || {
         let allowed_origin = allowed_origin_string.as_str();
         let cors = Cors::default()
               .allowed_origin(allowed_origin)
-              //.allowed_origin_fn(|origin, _req_head| {
-              //    origin.as_bytes().ends_with(b".leahdevs.xyz/")
-              //})
               .allowed_methods(vec!["GET", "POST"])
               .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
               .allowed_header(http::header::CONTENT_TYPE)
@@ -45,6 +63,7 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .wrap(cors)
+            .app_data(Data::clone(&cooldown))
             .service(get_count)
             .service(increment)
     }).bind(("127.0.0.1", 8080))?

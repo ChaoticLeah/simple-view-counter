@@ -1,5 +1,3 @@
-use std::iter;
-
 use structsy::{Structsy, StructsyError, StructsyIter, StructsyTx, Ref};
 use structsy_derive::{queries, Persistent};
 
@@ -24,7 +22,6 @@ pub fn add_view(path: &str) -> Result<i32, StructsyError> {
     let mut tx = db.begin()?;
     if let Some((id, mut data)) = iter.next() {
         data.views += 1;
-        println!("{:?}", data);
         tx.delete(&id)?;
         tx.insert(&data)?;
         tx.commit()?;
