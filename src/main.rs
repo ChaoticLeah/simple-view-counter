@@ -1,6 +1,11 @@
 use actix_cors::Cors;
 use actix_web::{
-    dev::ResourcePath, get, guard, http::{self}, middleware::{self, Logger}, post, web::{self, Data}, App, HttpRequest, HttpResponse, HttpServer, Responder
+    get, guard,
+    http::{self},
+    middleware::{self, Logger},
+    post,
+    web::{self, Data},
+    App, HttpRequest, HttpResponse, HttpServer, Responder,
 };
 use serde::Serialize;
 use std::env;
@@ -15,46 +20,65 @@ struct CountResponse {
     count: i32,
 }
 
+struct AppData {
+    cooldown: Mutex<cooldown::Cooldown>,
+    db_path: String,
+}
+
 #[post("/increment/{name}")]
 // async fn increment(data: web::Path<String>) -> impl Responder {
 async fn increment(req: HttpRequest) -> impl Responder {
-    let data = req.app_data::<Data<Mutex<cooldown::Cooldown>>>().unwrap();
+    let name = req.match_info().get("name").unwrap_or_default();
+    let data = req.app_data::<Data<Mutex<AppData>>>().unwrap();
     let connection_info = req.connection_info().clone();
     let ip = connection_info.realip_remote_addr().unwrap();
     println!("IP: {}", ip);
 
-    let mut cooldown = data.lock().unwrap();
+    let app_data = data.lock().unwrap();
 
-    if !cooldown.check(&ip) {
-        let views = db::get_views(&req.path());
+    if !app_data.cooldown.lock().unwrap().check(&ip) {
+        let views = db::get_views(name, app_data.db_path.clone());
         return HttpResponse::TooManyRequests().json(CountResponse {
             count: views.unwrap_or(0),
         });
     }
-    let views = db::add_view(&req.path());
+    
+    let views = db::add_view(name, app_data.db_path.clone());
     HttpResponse::Ok().json(CountResponse {
         count: views.unwrap_or(0),
     })
 }
 
 #[get("/{name}")]
-async fn get_count(data: web::Path<String>) -> impl Responder {
-    let views = db::get_views(&data.path());
-    HttpResponse::Ok().json(CountResponse {
+async fn get_count(req: HttpRequest) -> impl Responder {
+    let name = req.match_info().get("name").unwrap_or_default();
+    let data = req.app_data::<Data<Mutex<AppData>>>().unwrap();
+    let app_data = data.lock().unwrap();
+    
+    let views = db::get_views(name, app_data.db_path.clone());
+    return HttpResponse::Ok().json(CountResponse {
         count: views.unwrap_or(0),
-    })
+    });
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let mut config_path = PathBuf::from("config.yaml");
+    let mut db_path = "data.db";
 
     // Iterate over command-line arguments
     let args: Vec<String> = env::args().collect();
     for i in 0..args.len() {
-        if args[i] == "--config" && i + 1 < args.len() {
-            config_path = PathBuf::from(&args[i + 1]);
-            break;
+        if i + 1 < args.len() {
+            if args[i] == "--config" {
+                config_path = PathBuf::from(&args[i + 1]);
+                break;
+            }
+
+            if args[i] == "--db" {
+                db_path = &args[i + 1];
+                break;
+            }
         }
     }
 
@@ -77,18 +101,17 @@ async fn main() -> std::io::Result<()> {
         None => Vec::new(),
     };
 
-    let cooldown: Data<Mutex<cooldown::Cooldown>> = Data::new(Mutex::new(cooldown::Cooldown::new(
-        cooldown_setting,
-        blacklist_ips_setting,
-    )));
-
     let log_level = match config.log_level {
         Some(log) => log,
         None => "off".to_string(),
     };
-    
+
     env_logger::init_from_env(env_logger::Env::new().default_filter_or(log_level));
 
+    let app_data: Data<Mutex<AppData>> = Data::new(Mutex::new(AppData {
+        cooldown: Mutex::new(cooldown::Cooldown::new(cooldown_setting, blacklist_ips_setting)),
+        db_path: db_path.to_string(),
+    }));
 
     HttpServer::new(move || {
         let allowed_origin = allowed_origin_setting.as_str();
@@ -109,7 +132,7 @@ async fn main() -> std::io::Result<()> {
                 "default-src '*'; connect-src '*';",
             )))
             .wrap(Logger::new("%a %{User-Agent}i"))
-            .app_data(Data::clone(&cooldown))
+            .app_data(Data::clone(&app_data))
             .service(get_count)
             .service(increment)
     })

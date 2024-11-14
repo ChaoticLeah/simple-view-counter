@@ -2,8 +2,6 @@ FROM rust:latest
 
 WORKDIR /app
 
-RUN rm -f /var/lib/dpkg/info/ucf.md5sums && apt-get install --reinstall -y ucf
-
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 
