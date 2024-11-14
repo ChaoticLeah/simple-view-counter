@@ -1,8 +1,9 @@
-# Simple View Counter
-
-<center><img alt="Docker Image Size" src="https://img.shields.io/docker/image-size/chaoticleah/simple-view-counter?link=https%3A%2F%2Fhub.docker.com%2Frepository%2Fdocker%2Fchaoticleah%2Fsimple-view-counter%2Fgeneral">
-</center>
-
+<div align="center">
+  <img alt="Simple View Counter Logo" src="./readme-assets/logo.png" width="400px" />
+ 
+# A page view counter API
+  [![bundle size](https://img.shields.io/docker/image-size/chaoticleah/simple-view-counter)](https://hub.docker.com/repository/docker/chaoticleah/simple-view-counter)
+</div>
 
 **Simple View Counter** is a page view counter API, built in Rust, that follows the KISS (Keep It Simple, Stupid) principles. It is a lightweight and easy-to-integrate solution designed to help you count page views efficiently. This self-hosted API can be seamlessly integrated into websites with minimal setup, providing an effective way to track page views.
 
@@ -11,23 +12,24 @@
 - **Customizable Cooldown Period**: Set a cooldown period to limit the frequency of page views counted per IP.
 - **Simple Configuration**: Easily configurable via a YAML file.
 - **Super fast and lightweight**: Built with Rust for speed and efficiency. 🚀
-  
+
 ## Installation
 
 ### Docker (Recommended)
 
 Make a docker-compose.yml:
+
 ```yml
-version: '3.8'
+version: "3.8"
 
 services:
-    simple_view_counter:
-        image: chaoticleah/simple-view-counter:latest
-        container_name: view_counter
-        volumes:
-            - ./app:/app
-        ports:
-            - "8080:8080"
+  simple_view_counter:
+    image: chaoticleah/simple-view-counter:latest
+    container_name: view_counter
+    volumes:
+      - ./app:/app
+    ports:
+      - "8080:8080"
 ```
 
 Run `docker compose up` or `docker compose up -d` to keep it running in the background
@@ -61,6 +63,7 @@ Run the project by running the built file with these arguments:
 ### Configuration
 
 The api can be configured with a config.yaml file:
+
 ```yaml
 # Copy this config file and name it config.yaml. Place it in the same directory as the executable.
 
