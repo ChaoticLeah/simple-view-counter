@@ -1,12 +1,15 @@
 # Simple View Counter
 
+<center><img alt="Docker Image Size" src="https://img.shields.io/docker/image-size/chaoticleah/simple-view-counter"></center>
+[![docker-size](https://img.shields.io/docker/image-size/chaoticleah/simple-view-counter)](https://hub.docker.com/repository/docker/chaoticleah/simple-view-counter/general)
+
 **Simple View Counter** is a page view counter API, built in Rust, that follows the KISS (Keep It Simple, Stupid) principles. It is a lightweight and easy-to-integrate solution designed to help you count page views efficiently. This self-hosted API can be seamlessly integrated into websites with minimal setup, providing an effective way to track page views.
 
 ## Features
 
 - **Customizable Cooldown Period**: Set a cooldown period to limit the frequency of page views counted per IP.
 - **Simple Configuration**: Easily configurable via a YAML file.
-- **Rust Performance**: Built with Rust for speed and efficiency. 🚀
+- **Super fast and lightweight**: Built with Rust for speed and efficiency. 🚀
   
 ## Installation
 
