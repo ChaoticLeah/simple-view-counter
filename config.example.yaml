@@ -1,0 +1,4 @@
+# Copy this config file and name it config.yaml. Place it in the same directory as the executable.
+
+allowed_origin: "http://localhost:8080" # Allowed origin for CORS
+port: 8080

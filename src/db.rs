@@ -12,17 +12,13 @@ pub struct PageData {
 
 #[queries(PageData)]
 trait PageDataQuery {
-    /// The parameters name have two match the field names and type
-    /// like the `address` parameter match the `address` field of the struct.
     fn search(self, path: String) -> Self;
 }
 
 pub fn add_view(path: &str) -> Result<i32, StructsyError> {
-    // Open the database once
     let db = Structsy::open("data.db")?;
     db.define::<PageData>()?;
 
-    // Pass the database instance to get_views_data
     let mut iter = get_views_data(&db, path)?;
 
     let mut tx = db.begin()?;
@@ -54,7 +50,6 @@ pub fn get_views(path: &str) -> Result<i32, StructsyError> {
     let mut iter = get_views_data(&db, path)?;
     
     if let Some((_id, data)) = iter.next() {
-        println!("{:?}", data);
         Ok(data.views)
     } else {
         Ok(0)
