@@ -7,25 +7,29 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub struct Cooldown {
     cooldowns: HashMap<String, u64>,
     hours: u64,
+    blacklist: Vec<String>,
 }
 
 impl Cooldown {
-    pub fn new(hours: u64) -> Self {
+    pub fn new(hours: u64, blacklist: Vec<String>) -> Self {
         Cooldown {
             cooldowns: HashMap::new(),
             hours,
+            blacklist,
         }
     }
 
     pub fn check(&mut self, ip: &str) -> bool {
+        if self.blacklist.contains(&ip.to_string()) {
+            return false;
+        }
+        
         let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
         match self.cooldowns.get_mut(ip) {
             Some(time) => {
                 // Calculate elapsed time in hours
                 let elapsed_hours = (now - *time) / 3600;
-                println!("Elapsed hours: {}", elapsed_hours);
-                println!("Cooldown hours: {}", self.hours);
-                println!("{}", elapsed_hours >= self.hours);
+                
                 if elapsed_hours >= self.hours {
                     *time = now;
                     true

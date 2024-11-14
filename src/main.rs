@@ -41,7 +41,7 @@ async fn get_count(data: web::Path<String>) -> impl Responder {
 async fn main() -> std::io::Result<()> {
 
     let config = config::load_config().await.unwrap();
-    let allowed_origin_string = match config.allowed_origin {
+    let allowed_origin_setting = match config.allowed_origin {
         Some(origin) => origin,
         None => "http://localhost:8080".to_string(),
     };
@@ -50,10 +50,15 @@ async fn main() -> std::io::Result<()> {
         Some(cooldown) => cooldown,
         None => 12,
     };
+
+    let blacklist_ips_setting = match config.blacklist_ips {
+        Some(blacklist_ips) => blacklist_ips,
+        None => Vec::new(),
+    };
     
-    let cooldown: Data<Mutex<cooldown::Cooldown>> = Data::new(Mutex::new(cooldown::Cooldown::new(cooldown_setting)));
+    let cooldown: Data<Mutex<cooldown::Cooldown>> = Data::new(Mutex::new(cooldown::Cooldown::new(cooldown_setting, blacklist_ips_setting)));
     HttpServer::new(move || {
-        let allowed_origin = allowed_origin_string.as_str();
+        let allowed_origin = allowed_origin_setting.as_str();
         let cors = Cors::default()
               .allowed_origin(allowed_origin)
               .allowed_methods(vec!["GET", "POST"])

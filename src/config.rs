@@ -6,6 +6,7 @@ pub struct Config {
     pub allowed_origin: Option<String>,
     pub port: u16,
     pub cooldown: Option<u64>,
+    pub blacklist_ips: Option<Vec<String>>,
 }
 
 pub async fn load_config() -> Result<Config, Box<dyn Error>> {
