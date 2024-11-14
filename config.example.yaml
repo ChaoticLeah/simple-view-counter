@@ -1,7 +1,7 @@
 # Copy this config file and name it config.yaml. Place it in the same directory as the executable.
 
 allowed_origin: "http://localhost:8080" # Allowed origin for CORS
-port: 8080
 cooldown: 12 # How many hours to wait before accepting another view from the same IP on the same route. If the server restarts then it will also accept new views
+log_level: "info" # error, warn, info, debug, trace, or off
 blacklist_ips: # List of IPs to blacklist (Consider putting your own IP here so you dont count your own views)
   - "a"

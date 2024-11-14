@@ -13,8 +13,8 @@ trait PageDataQuery {
     fn search(self, path: String) -> Self;
 }
 
-pub fn add_view(path: &str) -> Result<i32, StructsyError> {
-    let db = Structsy::open("data.db")?;
+pub fn add_view(path: &str, db_path: &str) -> Result<i32, StructsyError> {
+    let db = Structsy::open(db_path)?;
     db.define::<PageData>()?;
 
     let mut iter = get_views_data(&db, path)?;
@@ -36,7 +36,7 @@ pub fn add_view(path: &str) -> Result<i32, StructsyError> {
 }
 
 pub fn get_views_data(db: &Structsy, path: &str) -> Result<StructsyIter<'static, (Ref<PageData>, PageData)>, StructsyError> {
-    let mut iter = db.query::<PageData>().search(path.to_string()).into_iter();
+    let iter = db.query::<PageData>().search(path.to_string()).into_iter();
     
     Ok(iter)
 }

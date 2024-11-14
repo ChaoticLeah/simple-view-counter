@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+    simple_view_counter:
+        image: chaoticleah/simple-view-counter:latest
+        container_name: view_counter
+        volumes:
+            - ./config.yaml:/app/config.yaml
+            - ./data.db:data.db  # Mount a volume for the database\
+        ports:
+            - "8080:8080"
