@@ -1,7 +1,8 @@
 <div align="center">
   <img alt="Simple View Counter Logo" src="./readme-assets/logo.png" width="400px" />
  
-# A page view counter API
+ A page view counter API
+ 
   [![bundle size](https://img.shields.io/docker/image-size/chaoticleah/simple-view-counter)](https://hub.docker.com/repository/docker/chaoticleah/simple-view-counter)
 </div>
 
