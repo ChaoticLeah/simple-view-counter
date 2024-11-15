@@ -23,6 +23,8 @@ struct CountResponse {
 struct AppData {
     cooldown: Mutex<cooldown::Cooldown>,
     db_path: String,
+    allowed_keys: Vec<String>,
+    // config: &config::Config,
 }
 
 #[post("/increment/{name}")]
@@ -36,13 +38,18 @@ async fn increment(req: HttpRequest) -> impl Responder {
 
     let app_data = data.lock().unwrap();
 
+    let allowed_keys = app_data.allowed_keys.clone();
+    if allowed_keys.len() > 0 && !allowed_keys.contains(&name.to_string()) {
+        return HttpResponse::Unauthorized().finish();
+    }
+
     if !app_data.cooldown.lock().unwrap().check(&ip, name) {
         let views = db::get_views(name, app_data.db_path.clone());
         return HttpResponse::TooManyRequests().json(CountResponse {
             count: views.unwrap_or(0),
         });
     }
-    
+
     let views = db::add_view(name, app_data.db_path.clone());
     HttpResponse::Ok().json(CountResponse {
         count: views.unwrap_or(0),
@@ -54,7 +61,7 @@ async fn get_count(req: HttpRequest) -> impl Responder {
     let name = req.match_info().get("name").unwrap_or_default();
     let data = req.app_data::<Data<Mutex<AppData>>>().unwrap();
     let app_data = data.lock().unwrap();
-    
+
     let views = db::get_views(name, app_data.db_path.clone());
     return HttpResponse::Ok().json(CountResponse {
         count: views.unwrap_or(0),
@@ -101,6 +108,11 @@ async fn main() -> std::io::Result<()> {
         None => Vec::new(),
     };
 
+    let allowed_keys_setting = match config.allowed_keys {
+        Some(allowed_keys) => allowed_keys,
+        None => Vec::new(),
+    };
+
     let log_level = match config.log_level {
         Some(log) => log,
         None => "off".to_string(),
@@ -109,19 +121,24 @@ async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or(log_level));
 
     let app_data: Data<Mutex<AppData>> = Data::new(Mutex::new(AppData {
-        cooldown: Mutex::new(cooldown::Cooldown::new(cooldown_setting, blacklist_ips_setting)),
+        cooldown: Mutex::new(cooldown::Cooldown::new(
+            cooldown_setting,
+            blacklist_ips_setting,
+        )),
         db_path: db_path.to_string(),
+        allowed_keys: allowed_keys_setting,
     }));
 
     HttpServer::new(move || {
         let cors = if allowed_origin_setting == "*" {
-                Cors::default().send_wildcard()
-            } else {
-                Cors::default().allowed_origin(&allowed_origin_setting)
-            }.allowed_methods(vec!["GET", "POST"])
-            .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
-            .allowed_header(http::header::CONTENT_TYPE)
-            .max_age(3600);
+            Cors::default().send_wildcard()
+        } else {
+            Cors::default().allowed_origin(&allowed_origin_setting)
+        }
+        .allowed_methods(vec!["GET", "POST"])
+        .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
+        .allowed_header(http::header::CONTENT_TYPE)
+        .max_age(3600);
 
         App::new()
             .wrap(cors)

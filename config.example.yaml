@@ -4,4 +4,6 @@ allowed_origin: "http://localhost:8080" # Allowed origin for CORS (Make this the
 cooldown: 12 # How many hours to wait before accepting another view from the same IP on the same route. If the server restarts then it will also accept new views
 log_level: "off" # error, warn, info, debug, trace, or off
 blacklist_ips: # List of IPs to blacklist (Consider putting your own IP here so you dont count your own views)
-  - "a"
+  - "111.111.111.111"
+allowed_keys:
+  - "test" # List of keys that are allowed to be used to access the API. If no keys are specified then all keys are allowed

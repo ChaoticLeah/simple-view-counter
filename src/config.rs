@@ -8,6 +8,7 @@ pub struct Config {
     pub log_level: Option<String>,
     pub cooldown: Option<u64>,
     pub blacklist_ips: Option<Vec<String>>,
+    pub allowed_keys: Option<Vec<String>>,
 }
 
 pub async fn load_config(path: PathBuf) -> Result<Config, Box<dyn Error>> {
