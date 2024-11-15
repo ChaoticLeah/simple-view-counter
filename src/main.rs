@@ -114,10 +114,11 @@ async fn main() -> std::io::Result<()> {
     }));
 
     HttpServer::new(move || {
-        let allowed_origin = allowed_origin_setting.as_str();
-        let cors = Cors::default()
-            .allowed_origin(allowed_origin)
-            .allowed_methods(vec!["GET", "POST"])
+        let cors = if allowed_origin_setting == "*" {
+                Cors::default().send_wildcard()
+            } else {
+                Cors::default().allowed_origin(&allowed_origin_setting)
+            }.allowed_methods(vec!["GET", "POST"])
             .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
             .allowed_header(http::header::CONTENT_TYPE)
             .max_age(3600);
