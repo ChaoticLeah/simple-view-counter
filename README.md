@@ -18,6 +18,8 @@
 
 ## Installation
 
+> Disclaimer: This software is quite new and might have bugs and issues.
+
 ### Docker (Recommended)
 
 Make a docker-compose.yml:
