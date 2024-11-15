@@ -35,7 +35,9 @@ services:
       - "8080:8080"
 ```
 
-Run `docker compose up` or `docker compose up -d` to keep it running in the background
+In the same directory as the docker-compose file make a /app folder and put your config file in there. (scroll down to config to set that up)
+
+Then Run `docker compose up` or `docker compose up -d` to keep it running in the background
 
 ### Build it yourself
 
