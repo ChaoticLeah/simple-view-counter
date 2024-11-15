@@ -36,7 +36,7 @@ async fn increment(req: HttpRequest) -> impl Responder {
 
     let app_data = data.lock().unwrap();
 
-    if !app_data.cooldown.lock().unwrap().check(&ip) {
+    if !app_data.cooldown.lock().unwrap().check(&ip, name) {
         let views = db::get_views(name, app_data.db_path.clone());
         return HttpResponse::TooManyRequests().json(CountResponse {
             count: views.unwrap_or(0),

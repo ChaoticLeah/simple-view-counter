@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
     simple_view_counter:
         image: chaoticleah/simple-view-counter:latest

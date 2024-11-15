@@ -19,17 +19,22 @@ impl Cooldown {
         }
     }
 
-    pub fn check(&mut self, ip: &str) -> bool {
-        if self.blacklist.contains(&ip.to_string()) {
+    pub fn check(&mut self, ip: &str, path_name: &str) -> bool {
+        let key = format!("{}_{}", path_name, ip);
+        
+        if self.blacklist.contains(&key) {
             return false;
         }
-        
-        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
-        match self.cooldowns.get_mut(ip) {
+
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        match self.cooldowns.get_mut(&key) {
             Some(time) => {
                 // Calculate elapsed time in hours
                 let elapsed_hours = (now - *time) / 3600;
-                
+
                 if elapsed_hours >= self.hours {
                     *time = now;
                     true
@@ -38,10 +43,9 @@ impl Cooldown {
                 }
             }
             None => {
-                self.cooldowns.insert(ip.to_string(), now);
+                self.cooldowns.insert(key, now);
                 true
             }
         }
     }
-    
 }
